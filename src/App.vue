@@ -9,16 +9,16 @@
           <div class="element-input">
            <form @submit.prevent="addTodo">
            <input v-model="newTodo" type="text" name="newTodo" id="newTodo" value="" placeholder="What you want to do next!" required>
-            <button type="submit" name="button" onclick="onDisplay">Add</button>
+            <button type="submit" name="button" @click="addTodo">Add</button>
             <button @click="allDone" type="button" name="button">All Done</button>
+
            </form>
           </div> 
         </div>
         <div class="element-list">
           <ul>
             <li v-for="(todo,index) in todos" :key="index">
-                <input type="text" name="newTodo" id="Output" :class="{done: todo.done}" v-model="todo.title" disabled>
-            
+                <input type="text" name="newTodo" id="Output" :class="{done: todo.done}" v-model="todo.title" disabled>            
                 <button @click="toggle(todo)" type="button" name="button">Done</button>
                 <button @click="removeTodo(todo)" type="button" name="button">Remove</button>
             </li>
@@ -40,15 +40,28 @@ export default {
          show: false
     }
   },
-   Mounted()
-   {
-     this.loadHistory();
-   },
     methods: {
       //This function takes the sentnece spoken by the user
-      onEnd({lastSentence}){
-          this.newTodo = lastSentence;
-          this.addTodo();
+      onEnd({lastSentence})
+      {
+          let word = lastSentence;
+          this.newTodo = word;
+          if(lastSentence.includes('remove') || lastSentence.includes('Remove') || lastSentence.includes('move'))
+          {
+                this.removeTodo();
+          }
+          else if(lastSentence.includes('Add') || lastSentence.includes('add'))
+          {
+            this.newTodo = word.slice('3');
+            this.addTodo();
+          }
+          else if(lastSentence.includes('All Done') || lastSentence.includes('all done'))
+          {
+            this.allDone();
+          }
+          else if(lastSentence.includes('clear list') || lastSentence.includes('ClearList')){
+            this.Clear();
+          }
       },
       //This function pushes the task into the array
       addTodo() {
@@ -56,7 +69,6 @@ export default {
           title: this.newTodo,
           done: false
         });
-        this.saveHistory();
         this.newTodo = '';
       },
       //This function changes the status of the tasks
@@ -64,13 +76,11 @@ export default {
       {
         const todoIndex = this.todos.indexOf(todo);
         this.todos[todoIndex].done = true;
-        this.saveHistory();
       },
       //This function remove the todo from the array
       removeTodo(todo) {
         const todoIndex = this.todos.indexOf(todo);
         this.todos.splice(todoIndex, 1);
-        this.saveHistory();
       },
       //This function sets the taks to true
       allDone() {
@@ -78,28 +88,12 @@ export default {
           todo.done = true;
         });
       },
-      //This function loads all the todos list 
-      loadHistory() {
-      if (localStorage.getItem("Data")) {
-        try {
-          this.Data = JSON.parse(localStorage.getItem("Data"));
-        } catch (e) {
-          localStorage.removeItem("Data");
-        }
+      //This function is used to clear the list
+      Clear(){
+        this.todos = [];
       }
     },
-    //This function saves the todos array into the local storage
-    saveHistory(){
-      const parsed = JSON.stringify(this.todos);
-      localStorage.setItem("Data", parsed);
-    },
-    //This function clears the data in the local storage
-    DeleteHistory() {
-      this.Data = [];
-      localStorage.clear();
-    },
-  }
-}
+  };
 </script>
 
 
@@ -116,11 +110,13 @@ export default {
 body
 {
     background-color: #0093E9;
+    font-family: 'Nunito',sans-serif;
 }
 
 .header
 {
     color: white;
+    position: relative;
     font-family: 'Nunito',sans-serif;
     text-align: center;
     margin: 25px;
@@ -134,13 +130,16 @@ body
    height: 500px;
    width: 550px;
 }
+.add-element{
+  width: 100%;
+}
 .add-element input{
     padding: 6px 4px;
     width: 70%;
 }
 .add-element button
 {
-    margin: 5px;
+    margin: 3px;
     padding: 7px 14px;
     background-color: #00b0ff;
     border: none;
@@ -159,20 +158,23 @@ body
     width: 100%;
     padding: 20px;
     border-radius: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.16); 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35); 
 }
 .element-list
 {
     font-family: 'Nunito',sans-serif;
     margin-top: 3px;
-    overflow-y: scroll;
+    overflow-x: auto;
     width: 100%;
     height: 80%;
     overflow-x: hidden;
 }
 .element-list input{
+  border: none;
   padding: 6px 4px;
   width: 60%;
+  color: black;
+
 }
 .element-list button{
     margin: 5px;
@@ -211,7 +213,7 @@ li:hover{
     width: 500px;
   }
   .add-element{
-    margin: 70px;
+    margin-left: 70px;
     width: 100%;
     height: 10%;
   }
@@ -228,8 +230,86 @@ li:hover{
   .element-list li{
     width: 85%;
     height: 60%;
-    margin-left: 14%;
+    margin-left: 13%;
   }
-   
+
+@media screen and (max-width: 360px) {
+  .container{
+    width: 400px;
+  }
+  .add-element
+  {
+    width: 100%;
+    margin-top: 5%;
+    margin-left: 50%;
+  }
+  .add-element input{
+    width: 100%;
+  }
+  .element-list{
+    width: 100%;
+    margin-top: 5%;
+  }
+  .element-list li{
+     width: 80%;
+  }
+  .element-list input{
+    width: 55%;
+  }
+  
 }
+
+@media screen and (max-width: 375px){
+  .header{
+    margin-left: 20%;
+  }
+  .container{
+    width: 450px;
+  }
+  .add-element{
+    width: 100%;
+    margin-left: 20%;
+  }
+  .add-element input{
+    width: 55%;
+  }
+  .add-element button{
+    margin: 3px;
+  }
+  .element-list{
+    margin-top: 10%;
+    margin-left: 7%;
+  }
+  .element-list input{
+    width: 57%;
+  }
+  .element-list button{
+    margin: 2px;
+  }
+}
+
+@media screen and (max-width: 320px){
+  .add-element{
+    margin-top: 10%;
+    margin-left: 26%;
+  }
+  .element-list{
+    margin-left: 12%;
+  }
+}
+
+@media screen and (max-width: 414px){
+  .add-element{
+    margin-left: 20%;
+  }
+  .element-list{
+    margin-left: 8%;
+    margin-top: 10%;
+  }
+
+  
+}
+
+}
+
 </style>
